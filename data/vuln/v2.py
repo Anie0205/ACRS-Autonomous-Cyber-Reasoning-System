@@ -1,3 +1,2 @@
-import os
-cmd = input("Enter: ")
-os.system(cmd)
+cmd = input("Enter command: ")
+exec(cmd)

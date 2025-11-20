@@ -36,5 +36,8 @@ class PatchRanker:
         scored = [(self.score(p), p) for p in patches]
         scored.sort(key=lambda x: x[0], reverse=True)
 
+        # Reorder input list so top-scoring patch is first (pipeline expects this)
+        patches[:] = [p for _, p in scored]
+
         # Return SCORE (NOT code)
         return scored[0][0]

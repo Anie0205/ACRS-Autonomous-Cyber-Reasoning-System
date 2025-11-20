@@ -1,1 +1,2 @@
-print("Hello safe world")
+user = input()
+print("Input length:", len(user))

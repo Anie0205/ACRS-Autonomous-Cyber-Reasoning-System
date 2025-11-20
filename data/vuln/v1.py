@@ -1,2 +1,3 @@
-user_input = input()
-eval(user_input)
+user = input("Enter expression: ")
+result = eval(user)
+print(result)

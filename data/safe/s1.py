@@ -1,2 +1,2 @@
-def safe_add(a, b):
-    return a + b
+user = input("Enter number: ")
+print(int(user))
