@@ -2,177 +2,125 @@
 """
 main.py
 -------
-
-Entry point for running the Autonomous Cyber Reasoning System (ACRS).
-
-This script provides a clean CLI for:
-
-    - Loading code samples (file or raw string)
-    - Running the full ACRS pipeline:
-            ML Detection →
-            Rule-based Analysis →
-            Patch Generation →
-            Patch Ranking →
-            Patch Validation →
-            Multi-iteration Refinement
-    - Returning a structured final report
-    - Writing patched code to disk
-
-Everything in this file is intentionally simple, transparent,
-and CPU-friendly. No GPU, no cloud, no LLM.
+Interactive Entry Point for ACRS.
 """
 
 import argparse
-import json
 import os
+import sys
+
+# [FIX] Add the project root directory to Python's path
+# This allows 'python acrs/main.py' to work without -m
+current_dir = os.path.dirname(os.path.abspath(__file__))
+parent_dir = os.path.dirname(current_dir)
+sys.path.insert(0, parent_dir)
 
 from acrs.pipeline.acrs import ACRSPipeline
 
+def clear_screen():
+    os.system('cls' if os.name == 'nt' else 'clear')
 
-# ---------------------------------------------------------
-# CLI Utilities
-# ---------------------------------------------------------
+def get_user_input():
+    """Interactive mode to get code from file or paste."""
+    print("\n--- ACRS Input Selection ---")
+    print("1. Upload File (Enter Path)")
+    print("2. Paste Raw Code")
+    choice = input("Select option (1/2): ").strip()
 
-def parse_cli():
-    """
-    Parses command-line arguments.
+    if choice == "1":
+        path = input("Enter file path: ").strip()
+        if not os.path.exists(path):
+            print(f"Error: File '{path}' not found.")
+            sys.exit(1)
+        with open(path, "r", encoding="utf-8") as f:
+            return f.read(), path
+    
+    elif choice == "2":
+        print("\nPaste your Python code below. (Press Ctrl+D or Ctrl+Z on new line to finish):")
+        lines = []
+        try:
+            while True:
+                line = input()
+                lines.append(line)
+        except EOFError:
+            pass
+        return "\n".join(lines), "pasted_code.py"
+    
+    else:
+        print("Invalid choice.")
+        sys.exit(1)
 
-    You can run either:
-        python main.py --file script.py
-    or
-        python main.py --code "print(eval(input()))"
-    """
-    parser = argparse.ArgumentParser(
-        description="Autonomous Cyber Reasoning System (ACRS)"
-    )
-
-    parser.add_argument(
-        "--file",
-        type=str,
-        help="Path to Python source file to analyze"
-    )
-
-    parser.add_argument(
-        "--code",
-        type=str,
-        help="Raw Python code as input (alternative to --file)"
-    )
-
-    parser.add_argument(
-        "--model",
-        type=str,
-        default="models/svm_model.pkl",
-        help="Path to trained SVM ML model"
-    )
-
-    parser.add_argument(
-        "--vectorizer",
-        type=str,
-        default="models/tfidf_vectorizer.pkl",
-        help="Path to TF-IDF vectorizer"
-    )
-
-    parser.add_argument(
-        "--max-iter",
-        type=int,
-        default=5,
-        help="Maximum patch-refinement iterations"
-    )
-
-    parser.add_argument(
-        "--output",
-        type=str,
-        default="patched_output.py",
-        help="Where to save the final patched code"
-    )
-
-    return parser.parse_args()
-
-
-# ---------------------------------------------------------
-# Pretty Print Helpers
-# ---------------------------------------------------------
-
-def print_banner():
-    print("=" * 70)
-    print("       AUTONOMOUS CYBER REASONING SYSTEM (ACRS) — CPU EDITION")
-    print("=" * 70)
-    print("This system uses:")
-    print(" • ML-based vulnerability detection (SVM + TF-IDF)")
-    print(" • Rule-based static analysis")
-    print(" • AST-driven patch generation")
-    print(" • ML patch ranking")
-    print(" • Sandboxed execution validation")
-    print("=" * 70)
-    print()
-
-
-def print_final_report(result: dict):
-    """
-    Prints a human-readable final summary of the ACRS run.
-    """
-
-    print("\n====================== FINAL ACRS REPORT ======================")
-    print(f"Success: {result['success']}")
-    print(f"Iterations used: {result['iterations']}")
-    print("\n--- Vulnerability Reports Each Iteration ---")
-
-    for i, rep in enumerate(result["reports"], 1):
-        print(f"\n[Iteration {i}]")
-        print(f" ML Label: {rep['ml_label']} (1 = vulnerable)")
-        print(f" ML Score: {rep['ml_score']:.4f}")
-        print(f" Rule-Based Findings: {rep['rule_findings']}")
-
-    print("\n===============================================================")
-
-
-# ---------------------------------------------------------
-# Main Runner
-# ---------------------------------------------------------
+def print_final_report(result):
+    """Prints the structured output requested."""
+    detected = result["detected"]
+    
+    # Calculate scores
+    vuln_confidence = result["ml_confidence"] 
+    safety_score = (1.0 - vuln_confidence) if detected else vuln_confidence
+    
+    print("\n" + "="*60)
+    print("                 ACRS FINAL REPORT")
+    print("="*60)
+    
+    # 1. Vulnerable / Non-vulnerable
+    status = "VULNERABLE" if detected else "NON-VULNERABLE"
+    status_color = "\033[91m" if detected else "\033[92m" # Red/Green ANSI
+    reset = "\033[0m"
+    
+    print(f"Status:       {status_color}{status}{reset}")
+    
+    # 2. Safety Score
+    print(f"Safety Score: {safety_score * 100:.2f}%")
+    
+    if detected:
+        print(f"Vuln Type:    {result['vulnerability_type']}")
+        
+        # 3. Patch Score
+        print(f"Patch Score:  {result['patch_score']:.2f} / 1.0")
+        print(f"Validated:    {'YES' if result['validated'] else 'NO'}")
+        
+        print("-" * 60)
+        print("PATCHED CODE PREVIEW:")
+        print("-" * 60)
+        print(result['patched_code'].strip())
+        print("-" * 60)
+        
+        # Save option
+        save = input("\nSave patched code to file? (y/n): ").lower()
+        if save == 'y':
+            with open("patched_output.py", "w", encoding="utf-8") as f:
+                f.write(result['patched_code'])
+            print("Saved to 'patched_output.py'")
+    else:
+        print("\nCode appears safe. No patching required.")
+    
+    print("="*60 + "\n")
 
 def main():
-    print_banner()
-    args = parse_cli()
+    parser = argparse.ArgumentParser(description="ACRS - CLI Mode")
+    parser.add_argument("--file", type=str, help="Path to file")
+    parser.add_argument("--code", type=str, help="Raw code string")
+    args = parser.parse_args()
 
-    # Check input sources
-    if not args.file and not args.code:
-        print("Error: provide either --file or --code")
-        return
+    # Initialize Pipeline
+    # Ensure you have run 'python acrs/detector/train_detector.py' first!
+    acrs = ACRSPipeline(ml_model_path="models")
 
-    # Initialize ACRS with paths to ML model + vectorizer
-    acrs = ACRSPipeline(
-        ml_model_path=args.model,
-        vectorizer_path=args.vectorizer,
-        max_iterations=args.max_iter,
-        save_patches=True
-    )
+    # Get Input
+    if args.file:
+        with open(args.file, "r") as f:
+            code = f.read()
+    elif args.code:
+        code = args.code
+    else:
+        # Interactive mode if no args passed
+        code, _ = get_user_input()
 
-    # Load input
-    code_source = args.file if args.file else args.code
+    # Run Pipeline
+    result = acrs.process(code)
 
-    # Run the full autonomous loop
-    result = acrs.run(code_source)
-
-    # Save patched code or original (if clean)
-    with open(args.output, "w", encoding="utf-8") as f:
-        f.write(result["patched_code"])
-
-    print(f"\nPatched code written to: {args.output}")
-
-    # Print readable report
+    # Output Results
     print_final_report(result)
-
-    # Also dump JSON for automation
-    json_report_path = "acrs_report.json"
-    with open(json_report_path, "w", encoding="utf-8") as f:
-        json.dump(result, f, indent=4)
-
-    print(f"JSON report saved as: {json_report_path}")
-
-
-# ---------------------------------------------------------
-# Entry Point
-# ---------------------------------------------------------
 
 if __name__ == "__main__":
     main()

@@ -29,8 +29,7 @@ class ACRSPipeline:
         self.log("Running ML vulnerability detector...")
         ml_label, ml_conf = self.detector.predict(code)
         
-        # [FIX] Whitelist: If code is already using our safety wrappers, trust it.
-        # This solves false positives on re-scanning patched code.
+        # Whitelist: Trust existing safety wrappers
         if "safe_eval" in code or "safe_exec" in code or "safe_open" in code or "safe_sql" in code:
             self.log("Safety wrapper detected. Overriding ML detection to SAFE.")
             ml_label = 0
@@ -63,14 +62,10 @@ class ACRSPipeline:
 
         return {
             "success": is_valid,
-            "iterations": 1,
-            "reports": [{
-                "ml_label": ml_label,
-                "ml_score": ml_conf,
-                "rule_findings": vuln_type
-            }],
             "detected": detected,
+            "ml_confidence": ml_conf,       # Safety Score (inverse of vulnerability confidence)
             "vulnerability_type": vuln_type,
+            "patch_score": best_score,      # [FIX] Added Patch Score return
             "patched_code": best_patch,
             "validated": is_valid,
         }
