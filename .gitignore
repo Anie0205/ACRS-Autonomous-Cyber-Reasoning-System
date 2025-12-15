@@ -4,3 +4,4 @@ acrs/patcher/__pycache__
 acrs/pipeline/__pycache__
 acrs/validator/__pycache__
 data
+frontend/node_modules

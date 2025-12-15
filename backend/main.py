@@ -15,7 +15,7 @@ current_dir = os.path.dirname(os.path.abspath(__file__))
 parent_dir = os.path.dirname(current_dir)
 sys.path.insert(0, parent_dir)
 
-from acrs.pipeline.acrs import ACRSPipeline
+from backend.pipeline.acrs import ACRSPipeline
 
 def clear_screen():
     os.system('cls' if os.name == 'nt' else 'clear')

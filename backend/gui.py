@@ -9,7 +9,7 @@ current_dir = os.path.dirname(os.path.abspath(__file__))
 parent_dir = os.path.dirname(current_dir)
 sys.path.insert(0, parent_dir)
 
-from acrs.pipeline.acrs import ACRSPipeline
+from backend.pipeline.acrs import ACRSPipeline
 
 # --- 2. INITIALIZE PIPELINE ---
 # We load this once at startup

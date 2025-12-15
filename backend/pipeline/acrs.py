@@ -1,10 +1,10 @@
 import time
 import textwrap
-from acrs.detector.ml_detector import MLDetector
-from acrs.patcher.rules import apply_patch_rules
-from acrs.patcher.patcher import generate_patch
-from acrs.patcher.patch_ranker import PatchRanker
-from acrs.validator.validator import Validator
+from backend.detector.ml_detector import MLDetector
+from backend.patcher.rules import apply_patch_rules
+from backend.patcher.patcher import generate_patch
+from backend.patcher.patch_ranker import PatchRanker
+from backend.validator.validator import Validator
 
 class ACRSPipeline:
     def __init__(self, ml_model_path="models", vectorizer_path="models", max_iterations=5, save_patches=True):
