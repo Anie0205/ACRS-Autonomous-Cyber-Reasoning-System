@@ -24,7 +24,7 @@ export default function Home() {
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState<AnalysisResult | null>(null);
   const [error, setError] = useState<string | null>(null);
-  const [apiUrl, setApiUrl] = useState("http://localhost:5000");
+  const [apiUrl, setApiUrl] = useState("https://acrs-autonomous-cyber-reasoning-system.onrender.com");
   const [showApiConfig, setShowApiConfig] = useState(false);
   const [showDiffView, setShowDiffView] = useState(true);
 
