@@ -123,6 +123,7 @@ if __name__ == '__main__':
     print("  POST /api/analyze - Analyze Python code")
     print("=" * 60)
     
-    # Run the Flask app on port 5000
-    app.run(host='0.0.0.0', port=5000, debug=True)
+    # Run the Flask app on the environment's PORT or default to 5000
+    port = int(os.environ.get("PORT", 5000))
+    app.run(host='0.0.0.0', port=port, debug=False) # Turn off debug for production
 
