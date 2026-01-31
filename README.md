@@ -19,7 +19,7 @@
 ## Demo
 [Click Here](https://acrs-tau.vercel.app/)
 
-![Video Demo](https://github.com/Anie0205/ACRS-Autonomous-Cyber-Reasoning-System/blob/main/demo.gif) 
+![Demo](https://github.com/Anie0205/ACRS-Autonomous-Cyber-Reasoning-System/blob/main/demo.gif)
 
 ---
 ## 🛡️ Supported Vulnerabilities
