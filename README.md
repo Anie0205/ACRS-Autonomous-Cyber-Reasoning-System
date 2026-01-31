@@ -16,7 +16,9 @@
 * **Synthetic Dataset Generator:** Built-in tool to generate diverse training samples for Broken Access Control vulnerabilities.
 
 ---
-## [Demo](https://acrs-tau.vercel.app/)
+## Demo
+[Click Here](https://acrs-tau.vercel.app/)
+
 ---
 ## 🛡️ Supported Vulnerabilities
 
