@@ -2,10 +2,6 @@ import ast
 from typing import List, Dict, Any
 
 class TaintVisitor(ast.NodeVisitor):
-    """
-    AST Visitor that tracks variable assignments from untrusted SOURCES 
-    and checks if they reach dangerous SINKS without sanitization.
-    """
     SOURCES = {'input', 'request.args.get', 'request.form.get'}
     SINKS = {'eval', 'exec', 'os.system', 'subprocess.Popen', 'sqlite3.connect'}
 
@@ -14,7 +10,6 @@ class TaintVisitor(ast.NodeVisitor):
         self.vulnerabilities: List[Dict[str, Any]] = []
 
     def visit_Assign(self, node: ast.Assign):
-        # Check if the right side of assignment comes from a tainted source
         if isinstance(node.value, ast.Call):
             func_name = self._get_func_name(node.value.func)
             if func_name in self.SOURCES:
@@ -25,8 +20,6 @@ class TaintVisitor(ast.NodeVisitor):
 
     def visit_Call(self, node: ast.Call):
         func_name = self._get_func_name(node.func)
-        
-        # Check if a dangerous sink is called with a tainted variable
         if func_name in self.SINKS:
             for arg in node.args:
                 if isinstance(arg, ast.Name) and arg.id in self.tainted_vars:
@@ -34,7 +27,7 @@ class TaintVisitor(ast.NodeVisitor):
                         "line": node.lineno,
                         "sink": func_name,
                         "tainted_var": arg.id,
-                        "cwe": "CWE-95: Improper Neutralization of Directives in Dynamically Evaluated Code ('Eval Injection')" if func_name in {'eval', 'exec'} else "CWE-78: OS Command Injection"
+                        "cwe": "CWE-95" if func_name in {'eval', 'exec'} else "CWE-78"
                     })
         self.generic_visit(node)
 
@@ -46,11 +39,10 @@ class TaintVisitor(ast.NodeVisitor):
         return ""
 
 def analyze_code_ast(source_code: str) -> List[Dict[str, Any]]:
-    """Parses Python source code and identifies taint-based security vulnerabilities."""
     try:
         tree = ast.parse(source_code)
         visitor = TaintVisitor()
         visitor.visit(tree)
         return visitor.vulnerabilities
     except SyntaxError as e:
-        return [{"error": f"Syntax error during AST parsing: {str(e)}"}]
+        return [{"error": f"Syntax error: {str(e)}"}]
