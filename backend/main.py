@@ -8,7 +8,7 @@ app = FastAPI(title="ACRS API")
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"], # Update this to your Vercel URL in production
+    allow_origins=["*"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -17,6 +17,13 @@ app.add_middleware(
 class CodeRequest(BaseModel):
     code: str
 
+# --- Health Check Endpoints (Fixes the 404 Error) ---
+@app.get("/")
+@app.get("/api/status")
+def health_check():
+    return {"status": "ok", "message": "ACRS Backend is online"}
+
+# --- Security Scan & Patch Endpoint ---
 @app.post("/api/analyze")
 def analyze_code(request: CodeRequest):
     # 1. Run deterministic AST check
